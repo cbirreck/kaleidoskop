@@ -146,46 +146,63 @@ function sternenhimmel(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): v
   );
 }
 
-const CORAL_COLORS = ["#ff6f61", "#ffb238", "#2ec4b6", "#20a4f3", "#f15bb5", "#cbf3f0"];
+/** Rubin, Smaragd, Saphir, Amethyst, Topas, Aquamarin. */
+const GEM_HUES = [348, 150, 215, 280, 45, 190];
 
-function korallenriff(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
-  mottle(ctx, size, rnd, "#07414d", [165, 200], [55, 90], [18, 42]);
-  // Verzweigte Korallen.
+function edelsteine(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#120d1c", [250, 300], [20, 50], [8, 24], 700);
+
   scatter(
     ctx,
     size,
     rnd,
-    200,
+    300,
     (c, r, q) => {
-      c.strokeStyle = pick(q, CORAL_COLORS);
-      c.lineWidth = Math.max(1.5, r * 0.22);
-      c.lineCap = "round";
-      for (let b = 0; b < 5; b++) {
-        c.save();
-        c.rotate((b / 5) * Math.PI * 2 + q() * 0.5);
+      const hue = pick(q, GEM_HUES);
+      const corners = 5 + Math.floor(q() * 4);
+      const pts: Array<[number, number]> = [];
+      for (let i = 0; i < corners; i++) {
+        const a = (i / corners) * Math.PI * 2;
+        const rr = r * range(q, 0.76, 1);
+        pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+      }
+
+      // Facetten: jedes Dreieck leicht anders hell, das erzeugt den Schliff.
+      for (let i = 0; i < corners; i++) {
+        const [x1, y1] = pts[i];
+        const [x2, y2] = pts[(i + 1) % corners];
+        c.fillStyle = `hsl(${hue} ${range(q, 60, 95)}% ${range(q, 24, 60)}%)`;
         c.beginPath();
         c.moveTo(0, 0);
-        c.quadraticCurveTo(r * 0.3, -r * 0.6, q() * r * 0.5, -r);
-        c.stroke();
-        c.restore();
+        c.lineTo(x1, y1);
+        c.lineTo(x2, y2);
+        c.closePath();
+        c.fill();
       }
-    },
-    [0.025, 0.06],
-  );
-  // Anemonen als farbige Tupfen dazwischen.
-  scatter(
-    ctx,
-    size,
-    rnd,
-    240,
-    (c, r, q) => {
-      c.fillStyle = pick(q, CORAL_COLORS);
+
+      // Tafel in der Mitte, heller als die Facetten.
+      c.fillStyle = `hsl(${hue} 85% ${range(q, 55, 76)}%)`;
       c.beginPath();
-      c.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+      pts.forEach(([x, y], i) => (i ? c.lineTo(x * 0.46, y * 0.46) : c.moveTo(x * 0.46, y * 0.46)));
+      c.closePath();
+      c.fill();
+
+      // Glanzlicht.
+      c.fillStyle = "rgb(255 255 255 / 0.7)";
+      c.beginPath();
+      c.ellipse(-r * 0.22, -r * 0.27, r * 0.19, r * 0.09, -0.6, 0, Math.PI * 2);
       c.fill();
     },
-    [0.012, 0.03],
+    [0.018, 0.042],
   );
+
+  // Feiner Glitzerstaub in den Zwischenraeumen.
+  for (let i = 0; i < 700; i++) {
+    ctx.fillStyle = `hsl(${pick(rnd, GEM_HUES)} 90% ${range(rnd, 70, 95)}%)`;
+    ctx.beginPath();
+    ctx.arc(rnd() * size, rnd() * size, size * range(rnd, 0.001, 0.004), 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 const PENCIL_COLORS = ["#e63946", "#f77f00", "#fcbf49", "#2a9d8f", "#264653", "#9b5de5", "#00bbf9", "#ff70a6"];
@@ -341,7 +358,7 @@ export const TEXTURES: TextureDef[] = [
   { id: "blumenwiese", label: "Blumenwiese", seed: 11, draw: blumenwiese },
   { id: "herbstlaub", label: "Herbstlaub", seed: 22, draw: herbstlaub },
   { id: "sternenhimmel", label: "Sternenhimmel", seed: 33, draw: sternenhimmel },
-  { id: "korallenriff", label: "Korallenriff", seed: 44, draw: korallenriff },
+  { id: "edelsteine", label: "Edelsteine", seed: 44, draw: edelsteine },
   { id: "buntstifte", label: "Buntstifte", seed: 55, draw: buntstifte },
   { id: "legosteine", label: "Legosteine", seed: 66, draw: legosteine },
   { id: "federn", label: "Federn", seed: 77, draw: federn },

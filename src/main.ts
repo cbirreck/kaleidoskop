@@ -7,7 +7,7 @@
 import { createTiles } from "./tiles";
 import { getTexture, type TextureDef } from "./textures";
 import { drawKaleidoscope, stateAt } from "./kaleidoscope";
-import { SPEED_LEVELS_DEG_PER_SEC, DEFAULT_SPEED_INDEX } from "./config";
+import { SPEED_LEVELS_DEG_PER_SEC, DEFAULT_SPEED_INDEX, SEGMENTS } from "./config";
 import * as timer from "./timer";
 
 type Screen = "start" | "viewer" | "end";
@@ -33,6 +33,7 @@ const ctx = el.stage.getContext("2d")!;
 let screen: Screen = "start";
 let current: TextureDef | null = null;
 let speedIndex = DEFAULT_SPEED_INDEX;
+let segments = SEGMENTS;
 let paused = false;
 
 /** Laufende Zeit ohne Pausen -- damit Pause den Drift wirklich einfriert. */
@@ -112,7 +113,7 @@ function frame(now: number): void {
     }
 
     const tex = getTexture(current);
-    drawKaleidoscope(ctx, tex, tex.width, tex.height, stageSize, stateAt(spinSeconds, rotationRad));
+    drawKaleidoscope(ctx, tex, tex.width, tex.height, stageSize, stateAt(spinSeconds, rotationRad), segments);
   }
 
   requestAnimationFrame(frame);
@@ -152,6 +153,15 @@ window.addEventListener("keydown", (e) => {
       const dir = e.key === "ArrowUp" ? 1 : -1;
       speedIndex = Math.min(Math.max(speedIndex + dir, 0), SPEED_LEVELS_DEG_PER_SEC.length - 1);
       hud(`Tempo ${speedIndex + 1}/5`);
+      break;
+    }
+    case "ArrowRight":
+    case "ArrowLeft": {
+      // Segmentzahl bleibt eine Papa-Taste. Der offensichtliche Kandidat, daraus
+      // spaeter einen Kind-Button zu machen -- er veraendert sofort sichtbar etwas.
+      const dir = e.key === "ArrowRight" ? 2 : -2;
+      segments = Math.min(Math.max(segments + dir, 4), 24);
+      hud(`${segments} Segmente`);
       break;
     }
     case "+":
