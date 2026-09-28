@@ -5,35 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kaleidoskop</title>
     <style>
+      :root {
+        --bg: #05070c;
+      }
       html,
       body {
         margin: 0;
         height: 100%;
-        background: #05070c;
+        background: var(--bg);
         overflow: hidden;
+        font: 500 15px/1 system-ui, sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
       }
-      body {
+
+      /* --- Timerbalken: blass genug, dass er ihn nach zwei Minuten ignoriert. --- */
+      #timerbar {
+        position: fixed;
+        inset: 0 auto auto 0;
+        height: 3px;
+        width: 100%;
+        transform-origin: left;
+        background: rgb(255 255 255 / 0.22);
+        transform: scaleX(0);
+        z-index: 40;
+        pointer-events: none;
+      }
+
+      /* --- Screens --- */
+      .screen {
+        position: fixed;
+        inset: 0;
         display: grid;
         place-items: center;
+        opacity: 1;
+        transition: opacity 0.35s;
       }
+      .screen[hidden] {
+        display: none;
+      }
+
+      /* --- Startseite: 8 runde Kacheln --- */
+      #tiles {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: clamp(12px, 2.5vw, 34px);
+        padding: 24px;
+      }
+      .tile {
+        width: clamp(110px, 17vw, 220px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: none;
+        padding: 0;
+        background: #0b0f18;
+        cursor: pointer;
+        overflow: hidden;
+        transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+        box-shadow: 0 0 0 0 rgb(255 255 255 / 0);
+      }
+      .tile canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .tile:hover,
+      .tile:focus-visible {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 4px rgb(255 255 255 / 0.55);
+        outline: none;
+      }
+
+      /* --- Kaleidoskop-Modus --- */
       #stage {
         display: block;
         border-radius: 50%;
       }
+      #controls {
+        position: fixed;
+        left: 50%;
+        bottom: 3vh;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 28px;
+        z-index: 30;
+      }
+      .bigbtn {
+        width: 92px;
+        height: 92px;
+        border-radius: 50%;
+        border: 3px solid rgb(255 255 255 / 0.55);
+        background: rgb(12 16 26 / 0.72);
+        color: #fff;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: transform 0.12s, background 0.12s;
+      }
+      .bigbtn:hover {
+        transform: scale(1.08);
+        background: rgb(30 38 56 / 0.85);
+      }
+      .bigbtn:active {
+        transform: scale(0.96);
+      }
+      .bigbtn svg {
+        width: 42px;
+        height: 42px;
+        fill: currentColor;
+      }
+
+      /* --- Endscreen: das Muster schlaeft, es ist nicht kaputt. --- */
+      #endscreen {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgb(3 5 12 / 0.82);
+        z-index: 50;
+        opacity: 0;
+        transition: opacity 1.2s;
+      }
+      #endscreen[hidden] {
+        display: none;
+      }
+      #endscreen.visible {
+        opacity: 1;
+      }
+      #endscreen svg {
+        width: min(38vmin, 260px);
+        height: auto;
+        fill: #f4e7b8;
+        opacity: 0.85;
+        animation: breathe 5s ease-in-out infinite;
+      }
+      @keyframes breathe {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        50% {
+          transform: scale(1.04);
+          opacity: 0.95;
+        }
+      }
+
+      /* --- HUD: nur fuer Papa, blendet von selbst wieder aus. --- */
       #hud {
         position: fixed;
-        top: 16px;
+        top: 18px;
         left: 50%;
         transform: translateX(-50%);
         padding: 6px 14px;
         border-radius: 999px;
         background: rgb(0 0 0 / 0.55);
         color: #fff;
-        font: 500 15px/1 system-ui, sans-serif;
-        letter-spacing: 0.02em;
         opacity: 0;
         transition: opacity 0.25s;
         pointer-events: none;
+        z-index: 60;
       }
       #hud.visible {
         opacity: 1;
@@ -41,7 +172,33 @@
     </style>
   </head>
   <body>
-    <canvas id="stage"></canvas>
+    <div id="timerbar"></div>
+
+    <section class="screen" id="start">
+      <div id="tiles"></div>
+    </section>
+
+    <section class="screen" id="viewer" hidden>
+      <canvas id="stage"></canvas>
+      <div id="controls">
+        <button class="bigbtn" id="btn-back" aria-label="Zurueck zur Auswahl">
+          <svg viewBox="0 0 24 24"><path d="M3 5h8v6H3zm10 0h8v6h-8zM3 13h8v6H3zm10 0h8v6h-8z" /></svg>
+        </button>
+        <button class="bigbtn" id="btn-play" aria-label="Pause oder weiter">
+          <svg id="icon-play" viewBox="0 0 24 24"><path d="M6 4h4v16H6zm8 0h4v16h-4z" /></svg>
+        </button>
+      </div>
+    </section>
+
+    <div id="endscreen" hidden>
+      <svg viewBox="0 0 100 100">
+        <path d="M63 8a42 42 0 1 0 29 71A46 46 0 0 1 63 8z" />
+        <circle cx="30" cy="22" r="3" />
+        <circle cx="20" cy="36" r="2" />
+        <circle cx="38" cy="12" r="2" />
+      </svg>
+    </div>
+
     <div id="hud"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
