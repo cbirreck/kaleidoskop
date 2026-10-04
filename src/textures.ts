@@ -344,6 +344,287 @@ function bonbons(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
   );
 }
 
+function schneeflocken(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#0a1a33", [200, 235], [50, 90], [10, 30], 700);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    240,
+    (c, r, q) => {
+      c.strokeStyle = q() > 0.3 ? "#ffffff" : "#bfe6ff";
+      c.lineWidth = Math.max(1, r * 0.1);
+      c.lineCap = "round";
+      // Sechs Arme mit je zwei Verzweigungen -- in sich schon symmetrisch.
+      for (let a = 0; a < 6; a++) {
+        c.save();
+        c.rotate((a / 6) * Math.PI * 2);
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.lineTo(0, -r);
+        c.moveTo(0, -r * 0.45);
+        c.lineTo(r * 0.3, -r * 0.68);
+        c.moveTo(0, -r * 0.45);
+        c.lineTo(-r * 0.3, -r * 0.68);
+        c.moveTo(0, -r * 0.75);
+        c.lineTo(r * 0.2, -r * 0.93);
+        c.moveTo(0, -r * 0.75);
+        c.lineTo(-r * 0.2, -r * 0.93);
+        c.stroke();
+        c.restore();
+      }
+    },
+    [0.018, 0.042],
+  );
+}
+
+function schmetterlinge(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#1d3326", [95, 165], [35, 70], [14, 36]);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    250,
+    (c, r, q) => {
+      const hue = range(q, 0, 360);
+      c.fillStyle = `hsl(${hue} 80% 62%)`;
+      for (const s of [-1, 1]) {
+        c.beginPath();
+        c.ellipse(s * r * 0.5, -r * 0.25, r * 0.5, r * 0.38, s * 0.5, 0, Math.PI * 2);
+        c.fill();
+        c.beginPath();
+        c.ellipse(s * r * 0.42, r * 0.3, r * 0.36, r * 0.3, -s * 0.4, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.fillStyle = `hsl(${(hue + 180) % 360} 85% 78%)`;
+      for (const s of [-1, 1]) {
+        c.beginPath();
+        c.arc(s * r * 0.58, -r * 0.28, r * 0.13, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.fillStyle = "#241a12";
+      c.beginPath();
+      c.ellipse(0, 0, r * 0.1, r * 0.55, 0, 0, Math.PI * 2);
+      c.fill();
+    },
+    [0.02, 0.045],
+  );
+}
+
+const FISH_COLORS = ["#ff8c42", "#ffd23f", "#ee4266", "#3bceac", "#5390d9", "#f7b2ad"];
+
+function fische(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#06283d", [185, 215], [55, 90], [14, 38], 800);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    300,
+    (c, r, q) => {
+      c.fillStyle = pick(q, FISH_COLORS);
+      c.beginPath();
+      c.ellipse(0, 0, r, r * 0.55, 0, 0, Math.PI * 2);
+      c.fill();
+      // Schwanzflosse
+      c.beginPath();
+      c.moveTo(-r * 0.85, 0);
+      c.lineTo(-r * 1.6, -r * 0.5);
+      c.lineTo(-r * 1.6, r * 0.5);
+      c.closePath();
+      c.fill();
+      // Rueckenflosse
+      c.beginPath();
+      c.moveTo(r * 0.1, -r * 0.45);
+      c.lineTo(r * 0.2, -r * 0.95);
+      c.lineTo(-r * 0.35, -r * 0.45);
+      c.closePath();
+      c.fill();
+      c.fillStyle = "#ffffff";
+      c.beginPath();
+      c.arc(r * 0.5, -r * 0.12, r * 0.17, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "#14202b";
+      c.beginPath();
+      c.arc(r * 0.55, -r * 0.12, r * 0.08, 0, Math.PI * 2);
+      c.fill();
+    },
+    [0.016, 0.034],
+  );
+  // Luftblasen zwischen den Fischen.
+  for (let i = 0; i < 500; i++) {
+    ctx.strokeStyle = `rgb(255 255 255 / ${range(rnd, 0.1, 0.4)})`;
+    ctx.lineWidth = size * 0.0015;
+    ctx.beginPath();
+    ctx.arc(rnd() * size, rnd() * size, size * range(rnd, 0.002, 0.009), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function murmeln(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#2b2f36", [200, 235], [4, 20], [16, 40], 600);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    280,
+    (c, r, q) => {
+      const hue = range(q, 0, 360);
+      c.save();
+      c.beginPath();
+      c.arc(0, 0, r, 0, Math.PI * 2);
+      c.clip();
+
+      c.fillStyle = `hsl(${hue} 70% 52%)`;
+      c.fillRect(-r, -r, r * 2, r * 2);
+      // Die eingeschlossenen Farbbaender.
+      c.fillStyle = `hsl(${(hue + 60) % 360} 85% 72%)`;
+      c.beginPath();
+      c.ellipse(0, 0, r * 0.78, r * 0.3, q() * Math.PI, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = `hsl(${(hue + 300) % 360} 80% 66%)`;
+      c.beginPath();
+      c.ellipse(0, 0, r * 0.46, r * 0.17, q() * Math.PI, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+
+      c.fillStyle = "rgb(255 255 255 / 0.8)";
+      c.beginPath();
+      c.ellipse(-r * 0.35, -r * 0.38, r * 0.22, r * 0.13, -0.6, 0, Math.PI * 2);
+      c.fill();
+    },
+    [0.018, 0.04],
+  );
+}
+
+function pilze(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#3b2a1a", [18, 70], [25, 60], [12, 32]);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    250,
+    (c, r, q) => {
+      c.fillStyle = "#f0e4cf";
+      c.fillRect(-r * 0.22, -r * 0.05, r * 0.44, r * 0.95);
+      c.fillStyle = q() > 0.25 ? "#d12b2b" : "#e08a2b";
+      c.beginPath();
+      c.ellipse(0, 0, r, r * 0.72, 0, Math.PI, 0);
+      c.fill();
+      c.fillStyle = "#ffffff";
+      for (let i = 0; i < 5; i++) {
+        c.beginPath();
+        c.arc(range(q, -r * 0.68, r * 0.68), range(q, -r * 0.5, -r * 0.06), r * 0.11, 0, Math.PI * 2);
+        c.fill();
+      }
+    },
+    [0.02, 0.045],
+  );
+}
+
+function sterneUndMonde(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#241046", [258, 300], [50, 88], [12, 34], 700);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    330,
+    (c, r, q) => {
+      c.fillStyle = q() > 0.4 ? "#ffd84d" : "#ffeaa0";
+      if (q() > 0.32) {
+        // Fuenfzackiger Stern.
+        c.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const rr = i % 2 ? r * 0.44 : r;
+          const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+          const x = Math.cos(a) * rr;
+          const y = Math.sin(a) * rr;
+          if (i) c.lineTo(x, y);
+          else c.moveTo(x, y);
+        }
+        c.closePath();
+        c.fill();
+      } else {
+        // Mondsichel aus zwei Boegen -- kein destination-out, das wuerde den
+        // gemusterten Hintergrund mit ausradieren.
+        c.beginPath();
+        c.arc(0, 0, r, 0.6, -0.6);
+        c.arc(r * 0.42, 0, r * 0.88, -0.75, 0.75, true);
+        c.closePath();
+        c.fill();
+      }
+    },
+    [0.016, 0.04],
+  );
+}
+
+const METAL_COLORS = ["#c9972b", "#b87333", "#9fa8ad", "#d9c27e", "#8c6239"];
+
+function zahnraeder(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#2a1d12", [18, 42], [28, 62], [10, 28], 600);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    230,
+    (c, r, q) => {
+      c.fillStyle = pick(q, METAL_COLORS);
+      const teeth = 8 + Math.floor(q() * 6);
+      c.beginPath();
+      c.arc(0, 0, r * 0.78, 0, Math.PI * 2);
+      c.fill();
+      for (let t = 0; t < teeth; t++) {
+        c.save();
+        c.rotate((t / teeth) * Math.PI * 2);
+        c.fillRect(-r * 0.13, -r, r * 0.26, r * 0.4);
+        c.restore();
+      }
+      c.fillStyle = "rgb(0 0 0 / 0.5)";
+      c.beginPath();
+      c.arc(0, 0, r * 0.26, 0, Math.PI * 2);
+      c.fill();
+      c.strokeStyle = "rgb(255 255 255 / 0.28)";
+      c.lineWidth = r * 0.06;
+      c.beginPath();
+      c.arc(0, 0, r * 0.55, 0, Math.PI * 2);
+      c.stroke();
+    },
+    [0.022, 0.05],
+  );
+}
+
+function wollknaeuel(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): void {
+  mottle(ctx, size, rnd, "#4a3b2f", [18, 48], [18, 48], [20, 46], 600);
+  scatter(
+    ctx,
+    size,
+    rnd,
+    240,
+    (c, r, q) => {
+      const hue = range(q, 0, 360);
+      c.save();
+      c.beginPath();
+      c.arc(0, 0, r, 0, Math.PI * 2);
+      c.clip();
+      c.fillStyle = `hsl(${hue} 62% 52%)`;
+      c.fillRect(-r, -r, r * 2, r * 2);
+      // Gewickelte Garnlagen.
+      c.lineWidth = r * 0.15;
+      c.lineCap = "round";
+      for (let i = 0; i < 7; i++) {
+        c.strokeStyle = `hsl(${hue} 68% ${range(q, 36, 74)}%)`;
+        c.save();
+        c.rotate(q() * Math.PI);
+        c.beginPath();
+        c.ellipse(0, 0, r * range(q, 0.5, 0.96), r * range(q, 0.14, 0.5), 0, 0, Math.PI * 2);
+        c.stroke();
+        c.restore();
+      }
+      c.restore();
+    },
+    [0.02, 0.044],
+  );
+}
+
 // --- Registry ---------------------------------------------------------------
 
 export interface TextureDef {
@@ -363,6 +644,15 @@ export const TEXTURES: TextureDef[] = [
   { id: "legosteine", label: "Legosteine", seed: 66, draw: legosteine },
   { id: "federn", label: "Federn", seed: 77, draw: federn },
   { id: "bonbons", label: "Bonbons", seed: 88, draw: bonbons },
+  // Seite 2
+  { id: "schneeflocken", label: "Schneeflocken", seed: 101, draw: schneeflocken },
+  { id: "schmetterlinge", label: "Schmetterlinge", seed: 112, draw: schmetterlinge },
+  { id: "fische", label: "Fische", seed: 123, draw: fische },
+  { id: "murmeln", label: "Murmeln", seed: 134, draw: murmeln },
+  { id: "pilze", label: "Pilze", seed: 145, draw: pilze },
+  { id: "sterne", label: "Sterne und Monde", seed: 156, draw: sterneUndMonde },
+  { id: "zahnraeder", label: "Zahnraeder", seed: 167, draw: zahnraeder },
+  { id: "wolle", label: "Wollknaeuel", seed: 178, draw: wollknaeuel },
 ];
 
 const TEXTURE_SIZE = 1024;

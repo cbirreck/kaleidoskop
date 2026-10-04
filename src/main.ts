@@ -7,7 +7,7 @@
 import { createTiles } from "./tiles";
 import { getTexture, type TextureDef } from "./textures";
 import { drawKaleidoscope, stateAt } from "./kaleidoscope";
-import { SPEED_LEVELS_DEG_PER_SEC, DEFAULT_SPEED_INDEX, SEGMENTS } from "./config";
+import { SPEED_LEVELS_DEG_PER_SEC, DEFAULT_SPEED_INDEX, SEGMENTS, SEGMENT_STEPS } from "./config";
 import * as timer from "./timer";
 
 type Screen = "start" | "viewer" | "end";
@@ -23,6 +23,9 @@ const el = {
   endscreen: document.querySelector<HTMLElement>("#endscreen")!,
   timerbar: document.querySelector<HTMLElement>("#timerbar")!,
   hud: document.querySelector<HTMLElement>("#hud")!,
+  dots: document.querySelector<HTMLElement>("#dots")!,
+  pagePrev: document.querySelector<HTMLButtonElement>("#page-prev")!,
+  pageNext: document.querySelector<HTMLButtonElement>("#page-next")!,
 };
 
 const ICON_PAUSE = "M6 4h4v16H6zm8 0h4v16h-4z";
@@ -33,7 +36,7 @@ const ctx = el.stage.getContext("2d")!;
 let screen: Screen = "start";
 let current: TextureDef | null = null;
 let speedIndex = DEFAULT_SPEED_INDEX;
-let segments = SEGMENTS;
+let segmentIndex = Math.max(0, SEGMENT_STEPS.indexOf(SEGMENTS));
 let paused = false;
 
 /** Laufende Zeit ohne Pausen -- damit Pause den Drift wirklich einfriert. */
@@ -113,7 +116,8 @@ function frame(now: number): void {
     }
 
     const tex = getTexture(current);
-    drawKaleidoscope(ctx, tex, tex.width, tex.height, stageSize, stateAt(spinSeconds, rotationRad), segments);
+    const state = stateAt(spinSeconds, rotationRad);
+    drawKaleidoscope(ctx, tex, tex.width, tex.height, stageSize, state, SEGMENT_STEPS[segmentIndex]);
   }
 
   requestAnimationFrame(frame);
@@ -131,7 +135,7 @@ function hud(text: string): void {
 
 // --- Seine Bedienung: Maus --------------------------------------------------
 
-createTiles(el.tiles, openViewer);
+const deck = createTiles(el.tiles, el.dots, el.pagePrev, el.pageNext, openViewer);
 
 el.btnBack.addEventListener("click", backToStart);
 el.btnPlay.addEventListener("click", () => {
@@ -157,11 +161,21 @@ window.addEventListener("keydown", (e) => {
     }
     case "ArrowRight":
     case "ArrowLeft": {
+      const dir = e.key === "ArrowRight" ? 1 : -1;
+
+      // Auf der Startseite blaettern die Pfeile, im Kaleidoskop stellen sie die
+      // Segmentzahl -- derselbe Finger, das Passende je nach Screen.
+      if (screen === "start") {
+        if (dir > 0) deck.next();
+        else deck.prev();
+        break;
+      }
+
       // Segmentzahl bleibt eine Papa-Taste. Der offensichtliche Kandidat, daraus
-      // spaeter einen Kind-Button zu machen -- er veraendert sofort sichtbar etwas.
-      const dir = e.key === "ArrowRight" ? 2 : -2;
-      segments = Math.min(Math.max(segments + dir, 4), 24);
-      hud(`${segments} Segmente`);
+      // spaeter einen Kind-Button zu machen -- sie veraendert sofort sichtbar etwas.
+      segmentIndex = Math.min(Math.max(segmentIndex + dir, 0), SEGMENT_STEPS.length - 1);
+      const n = SEGMENT_STEPS[segmentIndex];
+      hud(n === 1 ? "1 Segment (keine Spiegelung)" : `${n} Segmente`);
       break;
     }
     case "+":

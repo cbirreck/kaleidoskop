@@ -2,6 +2,18 @@
 export const SEGMENTS = 12;
 
 /**
+ * Waehlbare Segmentzahlen (Papa-Taste links/rechts).
+ *
+ * Keine feste Schrittweite, sondern eine Liste: nur so ist auch 1 erreichbar.
+ * Bei 1 gibt es keine Spiegelung mehr -- das Bild dreht sich einfach, mehr nicht.
+ * Bei 2 entsteht eine einzelne Spiegelachse.
+ */
+export const SEGMENT_STEPS = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24];
+
+/** Kacheln pro Seite auf der Startseite (A1). */
+export const TILES_PER_PAGE = 8;
+
+/**
  * Tempostufen in Grad pro Sekunde.
  *
  * GESCHAETZTE Startwerte, nicht gemessen. Nach der ersten Sitzung mit ihm justieren --

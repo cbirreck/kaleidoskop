@@ -45,12 +45,78 @@
         display: none;
       }
 
-      /* --- Startseite: 8 runde Kacheln --- */
+      /* --- Startseite: 8 runde Kacheln pro Seite, blaetterbar --- */
+      #start {
+        flex-direction: column;
+        gap: clamp(10px, 2vh, 24px);
+      }
+      #start:not([hidden]) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #startinner {
+        display: flex;
+        align-items: center;
+        gap: clamp(8px, 1.5vw, 24px);
+      }
       #tiles {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: clamp(12px, 2.5vw, 34px);
-        padding: 24px;
+        padding: 12px;
+        transition: opacity 0.22s;
+      }
+      #tiles.turning {
+        opacity: 0;
+      }
+
+      /* Blaettern gehoert ihm, also Maus und gross. */
+      .pagebtn {
+        width: 74px;
+        height: 74px;
+        flex: none;
+        border-radius: 50%;
+        border: 3px solid rgb(255 255 255 / 0.4);
+        background: rgb(12 16 26 / 0.7);
+        color: #fff;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: transform 0.12s, background 0.12s, opacity 0.2s;
+      }
+      .pagebtn svg {
+        width: 34px;
+        height: 34px;
+        fill: currentColor;
+      }
+      .pagebtn:hover {
+        transform: scale(1.1);
+        background: rgb(30 38 56 / 0.85);
+      }
+      .pagebtn:active {
+        transform: scale(0.95);
+      }
+      .pagebtn[disabled] {
+        opacity: 0.18;
+        cursor: default;
+        transform: none;
+      }
+
+      #dots {
+        display: flex;
+        gap: 12px;
+      }
+      #dots span {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgb(255 255 255 / 0.25);
+        transition: background 0.2s, transform 0.2s;
+      }
+      #dots span.active {
+        background: rgb(255 255 255 / 0.85);
+        transform: scale(1.25);
       }
       .tile {
         width: clamp(110px, 17vw, 220px);
@@ -81,13 +147,13 @@
         display: block;
         border-radius: 50%;
       }
+      /* Unten rechts statt mittig: in der Mitte haben die Knoepfe die Show ueberlagert. */
       #controls {
         position: fixed;
-        left: 50%;
-        bottom: 3vh;
-        transform: translateX(-50%);
+        right: clamp(16px, 3vw, 44px);
+        bottom: clamp(16px, 3vh, 44px);
         display: flex;
-        gap: 28px;
+        gap: 20px;
         z-index: 30;
       }
       .bigbtn {
@@ -175,7 +241,16 @@
     <div id="timerbar"></div>
 
     <section class="screen" id="start">
-      <div id="tiles"></div>
+      <div id="startinner">
+        <button class="pagebtn" id="page-prev" aria-label="Vorige Seite">
+          <svg viewBox="0 0 24 24"><path d="M15.5 3.5L7 12l8.5 8.5 2.1-2.1L11.2 12l6.4-6.4z" /></svg>
+        </button>
+        <div id="tiles"></div>
+        <button class="pagebtn" id="page-next" aria-label="Naechste Seite">
+          <svg viewBox="0 0 24 24"><path d="M8.5 3.5L17 12l-8.5 8.5-2.1-2.1L12.8 12 6.4 5.6z" /></svg>
+        </button>
+      </div>
+      <div id="dots"></div>
     </section>
 
     <section class="screen" id="viewer" hidden>
