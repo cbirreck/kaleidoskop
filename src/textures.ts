@@ -625,6 +625,248 @@ function wollknaeuel(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd): voi
   );
 }
 
+// --- Seite 3: Florale Symmetrien --------------------------------------------
+//
+// Diese acht brechen bewusst mit der Regel "kein zentrales Motiv": jedes ist EIN
+// grosses Ornament. Damit das im Kaleidoskop trotzdem funktioniert, waechst jedes
+// ueber die Bildecken hinaus (bis 1.5 x Halbbreite) -- ein Mandala mit leerem Rand
+// wuerde beim Abtasten meistens nichts zeigen.
+//
+// Schwarz-weiss, aber jede Kachel mit eigenem Farbstich im Grund: ohne den waeren
+// acht graue Kacheln fuer ein nicht lesendes Kind nicht unterscheidbar.
+
+const TAU = Math.PI * 2;
+
+/** Dunkler Grund mit Farbstich und feinem Rauschen. */
+function inkBackground(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd, hue: number): void {
+  ctx.fillStyle = `hsl(${hue} 42% 7%)`;
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 1400; i++) {
+    ctx.fillStyle = `hsl(${hue} ${range(rnd, 25, 60)}% ${range(rnd, 9, 26)}%)`;
+    ctx.beginPath();
+    ctx.arc(rnd() * size, rnd() * size, size * range(rnd, 0.002, 0.016), 0, TAU);
+    ctx.fill();
+  }
+}
+
+/** Ein Bluetenblatt mit Spitze nach oben, Basis im Ursprung. */
+function petalPath(c: CanvasRenderingContext2D, w: number, h: number): void {
+  c.beginPath();
+  c.moveTo(0, 0);
+  c.bezierCurveTo(w, -h * 0.3, w * 0.55, -h, 0, -h);
+  c.bezierCurveTo(-w * 0.55, -h, -w, -h * 0.3, 0, 0);
+  c.closePath();
+}
+
+/** Zeichnet `count` Kopien rotationssymmetrisch um den Ursprung. */
+function ringOf(c: CanvasRenderingContext2D, count: number, draw: (i: number) => void, phase = 0): void {
+  for (let i = 0; i < count; i++) {
+    c.save();
+    c.rotate(phase + (i / count) * TAU);
+    draw(i);
+    c.restore();
+  }
+}
+
+/**
+ * Radiales Blueten-Mandala mit `n`-zaehliger Symmetrie.
+ * Die Ringe reichen bis 1.5 x Halbbreite, damit auch die Bildecken gefuellt sind.
+ */
+function radialMandala(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd, n: number, hue: number): void {
+  inkBackground(ctx, size, rnd, hue);
+
+  const half = size / 2;
+  ctx.save();
+  ctx.translate(half, half);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  const radii = [0.16, 0.3, 0.46, 0.64, 0.86, 1.1, 1.38];
+
+  radii.forEach((rel, ringIndex) => {
+    const radius = half * rel;
+    const prev = half * (ringIndex ? radii[ringIndex - 1] : 0.04);
+    const band = radius - prev;
+    // Aeussere Ringe bekommen mehr Elemente, sonst wird es dort zu luftig.
+    const count = n * (ringIndex < 2 ? 1 : ringIndex < 4 ? 2 : 3);
+    const light = 70 + rnd() * 25;
+
+    switch (ringIndex % 4) {
+      case 0:
+        // Gefuellte Blueten.
+        ctx.fillStyle = `hsl(${hue} 8% ${light}%)`;
+        ringOf(ctx, count, () => {
+          ctx.translate(0, -prev);
+          petalPath(ctx, band * 0.44, band * 1.05);
+          ctx.fill();
+        });
+        break;
+      case 1:
+        // Umrissene Blueten, versetzt zum vorigen Ring.
+        ctx.strokeStyle = `hsl(${hue} 12% ${light}%)`;
+        ctx.lineWidth = Math.max(1, size * 0.0022);
+        ringOf(
+          ctx,
+          count,
+          () => {
+            ctx.translate(0, -prev);
+            petalPath(ctx, band * 0.4, band * 1.1);
+            ctx.stroke();
+          },
+          Math.PI / count,
+        );
+        break;
+      case 2:
+        // Strahlenkranz mit Punkten an den Spitzen.
+        ctx.strokeStyle = `hsl(${hue} 10% ${light}%)`;
+        ctx.fillStyle = `hsl(${hue} 10% ${light}%)`;
+        ctx.lineWidth = Math.max(1, size * 0.0018);
+        ringOf(ctx, count, () => {
+          ctx.beginPath();
+          ctx.moveTo(0, -prev);
+          ctx.lineTo(0, -radius);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, -radius, band * 0.14, 0, TAU);
+          ctx.fill();
+        });
+        break;
+      default:
+        // Bogenkranz: benachbarte Punkte durch Boegen verbunden.
+        ctx.strokeStyle = `hsl(${hue} 14% ${light}%)`;
+        ctx.lineWidth = Math.max(1, size * 0.0026);
+        ringOf(ctx, count, () => {
+          ctx.beginPath();
+          ctx.arc(0, -radius + band * 0.3, band * 0.42, 0, Math.PI, true);
+          ctx.stroke();
+        });
+        break;
+    }
+
+    // Feiner Trennkreis zwischen den Ringen.
+    if (ringIndex < radii.length - 1) {
+      ctx.strokeStyle = `hsl(${hue} 20% ${40 + rnd() * 20}%)`;
+      ctx.lineWidth = Math.max(1, size * 0.0014);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, TAU);
+      ctx.stroke();
+    }
+  });
+
+  // Bluetenmitte.
+  ctx.fillStyle = `hsl(${hue} 10% 88%)`;
+  ringOf(ctx, n, () => {
+    ctx.translate(0, -half * 0.03);
+    petalPath(ctx, half * 0.035, half * 0.1);
+    ctx.fill();
+  });
+  ctx.fillStyle = `hsl(${hue} 35% 55%)`;
+  ctx.beginPath();
+  ctx.arc(0, 0, half * 0.028, 0, TAU);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * Zygomorphe Bluete: nur EINE Spiegelachse statt Rotationssymmetrie
+ * (Orchideen, Lippenbluetler). Ranken fuellen die Flaeche bis in die Ecken.
+ */
+function zygomorph(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd, hue: number): void {
+  inkBackground(ctx, size, rnd, hue);
+
+  const half = size / 2;
+  ctx.save();
+  ctx.translate(half, half);
+  ctx.lineCap = "round";
+
+  // Alles zweimal: einmal normal, einmal an der Senkrechten gespiegelt.
+  for (const mirror of [1, -1]) {
+    ctx.save();
+    ctx.scale(mirror, 1);
+
+    // Seitliche Bluetenblaetter in mehreren Groessen nach aussen.
+    for (let i = 0; i < 7; i++) {
+      const spread = 0.2 + i * 0.19;
+      ctx.save();
+      ctx.translate(half * spread * 0.35, -half * 0.05 + half * spread * 0.12);
+      ctx.rotate(-0.5 - i * 0.16);
+      ctx.fillStyle = `hsl(${hue} 9% ${72 + rnd() * 20}%)`;
+      petalPath(ctx, half * (0.1 + i * 0.03), half * (0.3 + i * 0.12));
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Ranken, die in die Ecken laufen.
+    ctx.strokeStyle = `hsl(${hue} 14% ${60 + rnd() * 25}%)`;
+    ctx.lineWidth = Math.max(1, size * 0.0024);
+    for (let i = 0; i < 9; i++) {
+      const t = i / 8;
+      ctx.beginPath();
+      ctx.moveTo(0, half * 0.1);
+      ctx.bezierCurveTo(half * 0.5 * t, half * (0.2 + t), half * (0.6 + t), half * 0.3 * t, half * 1.5, half * (t * 2 - 1));
+      ctx.stroke();
+    }
+
+    // Kleine Blaetter entlang der Ranken.
+    ctx.fillStyle = `hsl(${hue} 10% ${78 + rnd() * 15}%)`;
+    for (let i = 0; i < 16; i++) {
+      ctx.save();
+      ctx.translate(half * range(rnd, 0.15, 1.4), half * range(rnd, -1.4, 1.4));
+      ctx.rotate(rnd() * TAU);
+      petalPath(ctx, half * 0.035, half * 0.11);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // Lippe in der Mitte.
+  ctx.fillStyle = `hsl(${hue} 12% 90%)`;
+  petalPath(ctx, half * 0.3, half * 0.5);
+  ctx.fill();
+  ctx.save();
+  ctx.rotate(Math.PI);
+  ctx.fillStyle = `hsl(${hue} 30% 62%)`;
+  petalPath(ctx, half * 0.22, half * 0.42);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+/**
+ * Spiralige Anordnung nach dem goldenen Winkel (137.5 Grad) -- der Bauplan
+ * eines Sonnenblumenkorbs. Fuellt die Flaeche von Natur aus gleichmaessig.
+ */
+function spiralbluete(ctx: CanvasRenderingContext2D, size: number, rnd: Rnd, hue: number): void {
+  inkBackground(ctx, size, rnd, hue);
+
+  const half = size / 2;
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const seeds = 900;
+  const scale = (half * 1.5) / Math.sqrt(seeds);
+
+  ctx.save();
+  ctx.translate(half, half);
+
+  for (let i = 0; i < seeds; i++) {
+    const radius = scale * Math.sqrt(i);
+    const angle = i * golden;
+    const grow = 0.02 + (i / seeds) * 0.055;
+
+    ctx.save();
+    ctx.translate(Math.cos(angle) * radius, Math.sin(angle) * radius);
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.fillStyle = `hsl(${hue} ${i % 7 === 0 ? 30 : 8}% ${62 + (i % 5) * 7}%)`;
+    petalPath(ctx, half * grow * 0.45, half * grow);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
 // --- Registry ---------------------------------------------------------------
 
 export interface TextureDef {
@@ -653,6 +895,15 @@ export const TEXTURES: TextureDef[] = [
   { id: "sterne", label: "Sterne und Monde", seed: 156, draw: sterneUndMonde },
   { id: "zahnraeder", label: "Zahnraeder", seed: 167, draw: zahnraeder },
   { id: "wolle", label: "Wollknaeuel", seed: 178, draw: wollknaeuel },
+  // Seite 3: florale Symmetrien, schwarz-weiss mit je einem Akzentton.
+  { id: "sym3", label: "Dreizaehlig (Lilie)", seed: 301, draw: (c, s, r) => radialMandala(c, s, r, 3, 350) },
+  { id: "sym4", label: "Vierzaehlig (Mohn)", seed: 302, draw: (c, s, r) => radialMandala(c, s, r, 4, 212) },
+  { id: "sym5", label: "Fuenfzaehlig (Rose)", seed: 303, draw: (c, s, r) => radialMandala(c, s, r, 5, 328) },
+  { id: "sym6", label: "Sechszaehlig (Narzisse)", seed: 304, draw: (c, s, r) => radialMandala(c, s, r, 6, 45) },
+  { id: "sym8", label: "Achtzaehlig (Anemone)", seed: 305, draw: (c, s, r) => radialMandala(c, s, r, 8, 272) },
+  { id: "sym12", label: "Zwoelfzaehlig (Ringelblume)", seed: 306, draw: (c, s, r) => radialMandala(c, s, r, 12, 178) },
+  { id: "symzygo", label: "Zygomorph (Orchidee)", seed: 307, draw: (c, s, r) => zygomorph(c, s, r, 140) },
+  { id: "symspiral", label: "Spiralig (Sonnenblume)", seed: 308, draw: (c, s, r) => spiralbluete(c, s, r, 28) },
 ];
 
 const TEXTURE_SIZE = 1024;
