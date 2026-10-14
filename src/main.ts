@@ -7,7 +7,7 @@
 import { createTiles } from "./tiles";
 import { getTexture, type TextureDef } from "./textures";
 import { drawKaleidoscope, stateAt } from "./kaleidoscope";
-import { SPEED_LEVELS_DEG_PER_SEC, DEFAULT_SPEED_INDEX, SEGMENTS, SEGMENT_STEPS } from "./config";
+import { SPEED_LEVELS_DEG_PER_SEC, DEFAULT_SPEED_INDEX, SYMMETRY, SYMMETRY_STEPS } from "./config";
 import * as timer from "./timer";
 
 type Screen = "start" | "viewer" | "end";
@@ -36,7 +36,7 @@ const ctx = el.stage.getContext("2d")!;
 let screen: Screen = "start";
 let current: TextureDef | null = null;
 let speedIndex = DEFAULT_SPEED_INDEX;
-let segmentIndex = Math.max(0, SEGMENT_STEPS.indexOf(SEGMENTS));
+let symmetryIndex = Math.max(0, SYMMETRY_STEPS.indexOf(SYMMETRY));
 let paused = false;
 
 /** Laufende Zeit ohne Pausen -- damit Pause den Drift wirklich einfriert. */
@@ -117,7 +117,7 @@ function frame(now: number): void {
 
     const tex = getTexture(current);
     const state = stateAt(spinSeconds, rotationRad);
-    drawKaleidoscope(ctx, tex, tex.width, tex.height, stageSize, state, SEGMENT_STEPS[segmentIndex]);
+    drawKaleidoscope(ctx, tex, tex.width, tex.height, stageSize, state, SYMMETRY_STEPS[symmetryIndex]);
   }
 
   requestAnimationFrame(frame);
@@ -156,7 +156,7 @@ window.addEventListener("keydown", (e) => {
     case "ArrowDown": {
       const dir = e.key === "ArrowUp" ? 1 : -1;
       speedIndex = Math.min(Math.max(speedIndex + dir, 0), SPEED_LEVELS_DEG_PER_SEC.length - 1);
-      hud(`Tempo ${speedIndex + 1}/5`);
+      hud(`Tempo ${speedIndex + 1}/${SPEED_LEVELS_DEG_PER_SEC.length}`);
       break;
     }
     case "ArrowRight":
@@ -164,18 +164,18 @@ window.addEventListener("keydown", (e) => {
       const dir = e.key === "ArrowRight" ? 1 : -1;
 
       // Auf der Startseite blaettern die Pfeile, im Kaleidoskop stellen sie die
-      // Segmentzahl -- derselbe Finger, das Passende je nach Screen.
+      // Zackenzahl -- derselbe Finger, das Passende je nach Screen.
       if (screen === "start") {
         if (dir > 0) deck.next();
         else deck.prev();
         break;
       }
 
-      // Segmentzahl bleibt eine Papa-Taste. Der offensichtliche Kandidat, daraus
+      // Zackenzahl bleibt eine Papa-Taste. Der offensichtliche Kandidat, daraus
       // spaeter einen Kind-Button zu machen -- sie veraendert sofort sichtbar etwas.
-      segmentIndex = Math.min(Math.max(segmentIndex + dir, 0), SEGMENT_STEPS.length - 1);
-      const n = SEGMENT_STEPS[segmentIndex];
-      hud(n === 1 ? "1 Segment (keine Spiegelung)" : `${n} Segmente`);
+      symmetryIndex = Math.min(Math.max(symmetryIndex + dir, 0), SYMMETRY_STEPS.length - 1);
+      const n = SYMMETRY_STEPS[symmetryIndex];
+      hud(n < 1 ? "keine Spiegelung" : n === 1 ? "1 Spiegelachse" : `${n} Zacken`);
       break;
     }
     case "+":

@@ -1,4 +1,4 @@
-import { SEGMENTS, ZOOM, DRIFT_SPEED_X, DRIFT_SPEED_Y } from "./config";
+import { SYMMETRY, ZOOM, DRIFT_SPEED_X, DRIFT_SPEED_Y } from "./config";
 
 /** Winkel-Ueberlappung in rad, verhindert Haarlinien zwischen den Sektoren. */
 const SEAM_OVERLAP = 0.004;
@@ -30,7 +30,11 @@ export function stateAt(spinSeconds: number, rotationRad: number): KaleidoscopeS
  * Bewusst unabhaengig von DOM, Zustand und Bildquelle: dieselbe Funktion bedient den
  * Vollbild-Modus und die Hover-Vorschau der Kacheln (und spaeter animierte Kacheln).
  *
- * @param size Kantenlaenge des quadratischen Zeichenbereichs in Geraetepixeln.
+ * @param size      Kantenlaenge des quadratischen Zeichenbereichs in Geraetepixeln.
+ * @param symmetry  Anzahl der Zacken. Jede Zacke sind zwei gespiegelte Sektoren, es
+ *                  wird also an jeder Kante gespiegelt -- deshalb ist das Ergebnis fuer
+ *                  *jeden* ganzzahligen Wert nahtlos, auch fuer 7 oder 9.
+ *                  0 schaltet die Spiegelung ganz ab.
  */
 export function drawKaleidoscope(
   ctx: CanvasRenderingContext2D,
@@ -39,10 +43,9 @@ export function drawKaleidoscope(
   imageH: number,
   size: number,
   state: KaleidoscopeState,
-  segments: number = SEGMENTS,
+  symmetry: number = SYMMETRY,
 ): void {
   const radius = size / 2;
-  const segAngle = (Math.PI * 2) / segments;
 
   // Das Bild wird vergroessert gezeichnet; der Sektor tastet nur einen Keil davon ab.
   const drawW = radius * ZOOM;
@@ -54,12 +57,28 @@ export function drawKaleidoscope(
 
   ctx.clearRect(0, 0, size, size);
 
-  for (let i = 0; i < segments; i++) {
+  // Sonderfall ohne Spiegelung: ein einziger runder Ausschnitt, der sich dreht.
+  if (symmetry < 1) {
+    ctx.save();
+    ctx.translate(radius, radius);
+    ctx.rotate(state.rotation);
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(image, -offsetX, -offsetY, drawW, drawH);
+    ctx.restore();
+    return;
+  }
+
+  const sectors = symmetry * 2;
+  const sectorAngle = Math.PI / symmetry;
+
+  for (let i = 0; i < sectors; i++) {
     const mirrored = i % 2 === 1;
 
-    // Ein gespiegelter Sektor landet eine Segmentbreite zurueck, also vorher
+    // Ein gespiegelter Sektor landet eine Sektorbreite zurueck, also vorher
     // eine Breite weiter drehen, damit die Sektoren luecken- und ueberlappungsfrei passen.
-    const angle = mirrored ? (i + 1) * segAngle : i * segAngle;
+    const angle = mirrored ? (i + 1) * sectorAngle : i * sectorAngle;
 
     ctx.save();
     ctx.translate(radius, radius);
@@ -68,7 +87,7 @@ export function drawKaleidoscope(
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.arc(0, 0, radius, -SEAM_OVERLAP, segAngle + SEAM_OVERLAP);
+    ctx.arc(0, 0, radius, -SEAM_OVERLAP, sectorAngle + SEAM_OVERLAP);
     ctx.closePath();
     ctx.clip();
 

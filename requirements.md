@@ -35,18 +35,30 @@ Bewusst **nicht** responsive. iPad ist i-2 (siehe unten).
 
 ### A2 — Kaleidoskop-Modus
 
-- **A2a — Effekt:** Canvas 2D. 12 feste Spiegelsegmente. Es rotiert *und* der
-  abgetastete Bildausschnitt driftet langsam über das Bild. Der Drift ist der
-  Unterschied zwischen Bildschirmschoner und "das Kind guckt zehn Minuten hin".
+- **A2a — Effekt:** Canvas 2D. Spiegelsymmetrie, Default 6 Zacken (= 12 Sektoren).
+  Es rotiert *und* der abgetastete Bildausschnitt driftet langsam über das Bild.
+  Der Drift ist der Unterschied zwischen Bildschirmschoner und "das Kind guckt
+  zehn Minuten hin".
 - **A2b — Steuerung:**
   - **Seine Buttons** (Maus, groß, unten, Symbole): Play/Pause, Zurück zur Auswahl.
-  - **Meine Tasten** (unsichtbar): `↑`/`↓` Tempo, `+`/`−` Timer, `F` Fullscreen,
-    `Esc` Freigabe des Endscreens.
-- **Tempostufen:** 5 diskrete Stufen, Default Stufe 2.
-  Startwerte ca. 1 / 3 / 6 / 12 / 25 °/s — **geschätzt, nicht gemessen.**
+  - **Meine Tasten** (unsichtbar): `↑`/`↓` Tempo, `←`/`→` Zackenzahl (auf der
+    Startseite blättern dieselben Tasten die Kachelseiten), `+`/`−` Timer,
+    `F` Fullscreen, `Esc` Freigabe des Endscreens.
+- **Tempostufen:** 7 diskrete Stufen, Default Stufe 2.
+  Startwerte ca. 1 / 3 / 6 / 12 / 25 / 50 / 100 °/s — **geschätzt, nicht gemessen.**
   Als benannte Konstanten oben in der Datei halten; nach der ersten Sitzung justieren.
-  (Bei 12 Segmenten wiederholt sich das Muster alle 30°, die gefühlte Geschwindigkeit
+  (Bei 6 Zacken wiederholt sich das Muster alle 60°, die gefühlte Geschwindigkeit
   ist deutlich höher als die Gradzahl vermuten lässt.)
+- **A2c — Zackenzahl:** lückenlos 1 … 20, Default 6, plus eine Stufe 0 ganz ohne
+  Spiegelung (das Bild dreht sich dann einfach). Die oberen Stufen sind feines
+  Flirren — 20 Zacken sind 40 Sektoren.
+
+  Gezählt werden **Zacken**, nicht Sektoren. Das ist keine Kosmetik, sondern Geometrie:
+  nahtlos wird das Bild nur, wenn an *jeder* Sektorkante gespiegelt wird — nach einem
+  Umlauf muss die Orientierung wieder stimmen, die Sektorzahl ist damit zwangsläufig
+  gerade. Eine ungerade Sektorzahl (7, 9) lässt sich **nicht** nahtlos zeichnen; sie
+  behielte immer eine mitdrehende Bruchkante. Zählt man Zacken — je zwei gespiegelte
+  Sektoren —, ist jeder ganzzahlige Wert erreichbar und nahtlos, 7 und 9 inklusive.
 
 ### A3 — Timer
 
@@ -141,12 +153,13 @@ Das Risiko zuerst: Wenn der Effekt nicht fesselt, ändert das alles Nachfolgende
 
 ## Bewusst nicht in i-1
 
-Ton · Bild-Upload · Kamera-Modus · veränderbare Segmentzahl · animierte Vorschau für
-*alle* Kacheln gleichzeitig · Persistenz · Hosting · responsive Layout
+Ton · Bild-Upload · Kamera-Modus · animierte Vorschau für *alle* Kacheln gleichzeitig ·
+Persistenz · Hosting · responsive Layout
 
-**Stärkste Kandidaten für i-1.5:** Button "mehr/weniger Zacken" (verändert sichtbar
-sofort etwas — genau das, was ein 3-Jähriger an Knöpfen liebt) und die Kamera als
-Bildquelle (er sieht sich selbst gespiegelt).
+**Stärkste Kandidaten für i-1.5:** die Zackenzahl als **sein** Button (sie liegt bisher
+nur auf meinen Pfeiltasten — verändert sichtbar sofort etwas, genau das, was ein
+3-Jähriger an Knöpfen liebt) und die Kamera als Bildquelle (er sieht sich selbst
+gespiegelt).
 
 ## i-2 — iPad
 

@@ -1,14 +1,30 @@
-/** Anzahl der Spiegelsegmente. 6 wirkt grob-blumig, 12 klassisch, 20 zappelig. */
-export const SEGMENTS = 12;
+/**
+ * Symmetriegrad = Anzahl der "Zacken".
+ *
+ * Eine Zacke besteht aus zwei gespiegelten Bildsektoren, der Wert ist also die Haelfte
+ * der sichtbaren Keile. 6 wirkt grob-blumig, 10 klassisch, ab 16 wird es feines Flirren.
+ *
+ * Warum Zacken und nicht Sektoren: Nahtlosigkeit erfordert, dass an *jeder* Kante
+ * gespiegelt wird -- nach einem Umlauf muss die Orientierung wieder stimmen, die
+ * Sektorzahl ist damit zwangslaeufig gerade. Zaehlt man stattdessen Zacken, ist jeder
+ * ganzzahlige Wert erreichbar, auch 7 und 9.
+ */
+export const SYMMETRY = 6;
 
 /**
- * Waehlbare Segmentzahlen (Papa-Taste links/rechts).
+ * Waehlbare Symmetriegrade (Papa-Taste links/rechts).
  *
- * Keine feste Schrittweite, sondern eine Liste: nur so ist auch 1 erreichbar.
- * Bei 1 gibt es keine Spiegelung mehr -- das Bild dreht sich einfach, mehr nicht.
- * Bei 2 entsteht eine einzelne Spiegelachse.
+ * Lueckenlos 1..20, damit jeder Zwischenschritt existiert.
+ * 0 ist der Sonderfall ohne jede Spiegelung -- das Bild dreht sich einfach, mehr nicht.
+ * 1 ergibt eine einzelne Spiegelachse.
+ *
+ * 20 Zacken sind 40 Sektoren: die Keile werden dort so schmal, dass vom Bild kaum mehr
+ * als ein Farbstreifen pro Sektor uebrig bleibt. Das ist gewollt -- es sieht aus wie
+ * eine Dahlie und ist der sichtbarste Kontrast zu den niedrigen Stufen.
  */
-export const SEGMENT_STEPS = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24];
+export const SYMMETRY_STEPS = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+];
 
 /** Kacheln pro Seite auf der Startseite (A1). */
 export const TILES_PER_PAGE = 8;
@@ -19,10 +35,11 @@ export const TILES_PER_PAGE = 8;
  * GESCHAETZTE Startwerte, nicht gemessen. Nach der ersten Sitzung mit ihm justieren --
  * das ist kein Versagen der Planung, sondern der einzige Weg, die richtigen Werte zu finden.
  *
- * Achtung: Bei 12 Segmenten wiederholt sich das Muster schon alle 30 Grad. Die gefuehlte
- * Geschwindigkeit ist deshalb deutlich hoeher als die Gradzahl vermuten laesst.
+ * Achtung: Bei S Zacken wiederholt sich das Muster schon alle 360/S Grad, bei 6 also
+ * alle 60. Die gefuehlte Geschwindigkeit ist deshalb deutlich hoeher als die Gradzahl
+ * vermuten laesst -- Stufe 7 laeuft rund drei Mustern pro Sekunde entgegen.
  */
-export const SPEED_LEVELS_DEG_PER_SEC = [1, 3, 6, 12, 25];
+export const SPEED_LEVELS_DEG_PER_SEC = [1, 3, 6, 12, 25, 50, 100];
 
 /** Stufe 2 (Index 1) ist der Default. */
 export const DEFAULT_SPEED_INDEX = 1;
