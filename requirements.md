@@ -60,6 +60,15 @@ Bewusst **nicht** responsive. iPad ist i-2 (siehe unten).
   behielte immer eine mitdrehende Bruchkante. Zählt man Zacken — je zwei gespiegelte
   Sektoren —, ist jeder ganzzahlige Wert erreichbar und nahtlos, 7 und 9 inklusive.
 
+**Randbedingung beim Abtasten (gefunden, nicht vermutet):** Alle Sektoren tasten
+*denselben* schmalen Keil des Bildes ab — genau das macht es zum Kaleidoskop. Bei
+0 und 1 Zacken ist dieser Keil aber kein schmaler Ausschnitt, sondern ein ganzer bzw.
+halber Kreis; er ragte bei niedrigem Drift über den Bildrand hinaus. Gemessen bis zu
+**73,7 % durchsichtige Fläche** bei 0 Zacken. Der Drift wird deshalb nicht mehr über
+den vollen Bereich geführt, sondern zwischen den Grenzen interpoliert, in denen der
+Keil im Bild bleibt — bei 2 Zacken und mehr ändert das praktisch nichts (0,4 %
+kleinerer Hub), bei 0 und 1 behebt es den Defekt.
+
 ### A3 — Timer
 
 Begrenzt die Bildschirmzeit. Default 10 Minuten.
