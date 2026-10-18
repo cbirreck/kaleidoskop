@@ -115,12 +115,33 @@ wird zu Matsch.
 
 ## Start im Alltag
 
-`npm run build` erzeugt statische Dateien, `Kaleidoskop.cmd` (als Desktop-Verknüpfung)
-öffnet sie in **Edge im Kiosk-Modus**: Vollbild, keine Tabs, keine Adressleiste,
-kein X zum Wegklicken.
+Die Startlogik steht an **einer** Stelle: `bin/kaleidoskop.ps1`. Sie findet den
+Projektordner relativ zu sich selbst, baut neu falls eine Quelldatei jünger ist als
+`dist/index.html`, und öffnet die Seite in **Edge im Kiosk-Modus**: Vollbild, keine
+Tabs, keine Adressleiste, kein X zum Wegklicken.
 
-Das ist kein Komfort-Feature. Wenn "Kaleidoskop gucken" bedeutet, erst ein Terminal zu
-öffnen, benutzen wir es dreimal und nie wieder.
+Drei Wege führen hinein, alle auf dieselbe Datei:
+
+| Weg | wofür |
+|---|---|
+| `kaleidoskop` im Terminal | PATH-registriert (`bin/` im User-PATH) |
+| `Kaleidoskop.cmd` im Wurzelverzeichnis | Desktop-Verknüpfung, leitet nur weiter |
+| `bin/kaleidoskop.cmd` | Shim für cmd.exe, Win+R, Explorer-Adressleiste |
+
+Schalter: `-Rebuild` (Neubau erzwingen), `-Windowed` (normales Fenster statt Kiosk —
+im Kiosk gibt es keine Entwicklertools), `-Restart` (laufende Instanz ersetzen).
+Ohne `-Restart` meldet ein zweiter Aufruf nur, dass schon etwas läuft; zwei
+Kiosk-Fenster übereinander sind nicht offensichtlich, aber sehr verwirrend.
+
+Zwei Dinge, die dabei nicht offensichtlich sind:
+
+- **`.PS1` steht nicht in `PATHEXT`.** PowerShell findet `.ps1` im PATH trotzdem
+  (als `ExternalScript`), cmd.exe nicht. Daher der `.cmd`-Shim daneben.
+- **Der automatische Neubau ist kein Komfort.** Ohne ihn startet man irgendwann
+  ahnungslos einen alten Stand und sucht den Fehler im Code statt im Build.
+
+Das alles ist kein Komfort-Feature. Wenn "Kaleidoskop gucken" bedeutet, erst ein
+Terminal zu öffnen, benutzen wir es dreimal und nie wieder.
 
 `npm run dev` bleibt fürs Entwickeln.
 

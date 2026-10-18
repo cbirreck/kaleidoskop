@@ -1,24 +1,12 @@
 @echo off
-REM Startet das Kaleidoskop im Edge-Kiosk-Modus: Vollbild, keine Tabs,
-REM keine Adressleiste, kein X zum Wegklicken.
+REM Desktop-Verknuepfung fuer den Alltag. Die Logik steht in bin\kaleidoskop.ps1 --
+REM diese Datei leitet nur weiter, damit es nicht zwei Starter gibt, die auseinanderlaufen.
 REM
-REM Diese Datei als Verknuepfung auf den Desktop legen. Wenn "Kaleidoskop gucken"
-REM bedeutet, erst ein Terminal zu oeffnen, benutzen wir es dreimal und nie wieder.
+REM Wenn "Kaleidoskop gucken" bedeutet, erst ein Terminal zu oeffnen, benutzen wir es
+REM dreimal und nie wieder.
 
-set "PAGE=%~dp0dist\index.html"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0bin\kaleidoskop.ps1" %*
 
-if not exist "%PAGE%" (
-  echo Kein Build gefunden. Bitte einmal "npm run build" ausfuehren.
-  pause
-  exit /b 1
-)
-
-set "EDGE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
-if not exist "%EDGE%" set "EDGE=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"
-if not exist "%EDGE%" (
-  echo Edge nicht gefunden. Pfad in dieser Datei anpassen.
-  pause
-  exit /b 1
-)
-
-start "" "%EDGE%" --kiosk "file:///%PAGE:\=/%" --edge-kiosk-type=fullscreen --no-first-run
+REM Beim Doppelklick schliesst sich das Fenster sofort. Bei einem Fehler soll man
+REM lesen koennen, was schiefging.
+if errorlevel 1 pause
