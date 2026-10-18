@@ -909,16 +909,70 @@ export const TEXTURES: TextureDef[] = [
 const TEXTURE_SIZE = 1024;
 const cache = new Map<string, HTMLCanvasElement>();
 
-/** Rendert eine Textur (gecacht) und gibt sie als Canvas zurueck. */
+/**
+ * Rendert eine Textur in beliebiger Kantenlaenge -- ungecacht.
+ *
+ * Alle Motive sind Vektorarbeit auf einem `size`-Raster, deshalb ist das Ergebnis bei
+ * jeder Aufloesung *dasselbe Bild*, nur feiner aufgeloest. Gezeichnet wird trotzdem
+ * immer im 1024er-Koordinatensystem und nur der Kontext skaliert: so wachsen auch
+ * absolute Angaben (Linienbreiten, Schatten) mit, statt bei 4096 zu Haarlinien zu
+ * verkuemmern. Der Seed ist derselbe, also auch jedes Zufallsdetail.
+ *
+ * Gebraucht wird das fuer den Snapshot (A4): ein hochskalierter Bildschirminhalt waere
+ * beim Ausdrucken matschig, das hier ist scharf.
+ */
+export function renderTexture(def: TextureDef, size: number): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(size / TEXTURE_SIZE, size / TEXTURE_SIZE);
+  def.draw(ctx, TEXTURE_SIZE, makeRandom(def.seed));
+  return canvas;
+}
+
+/** Normalisierter Ausschnitt einer Textur, Kantenlaengen in Anteilen von 0..1. */
+export interface TextureWindow {
+  x: number;
+  y: number;
+  size: number;
+}
+
+/**
+ * Rendert nur einen *Ausschnitt* der Textur, dafuer in voller Zielaufloesung.
+ *
+ * Das ist der Trick, mit dem ein 5-Prozent-Innenkreis scharf wird: ein kleiner
+ * Ausschnitt aus einer fertigen Bitmap waere nur so fein wie die Bitmap, und die
+ * muesste dafuer absurd gross sein (bei 5 Prozent rund 40 000 px Kantenlaenge --
+ * jenseits dessen, was ein Canvas kann). Weil die Motive Vektorarbeit sind, laesst
+ * sich stattdessen das Fenster direkt in Zielgroesse zeichnen: gleiche Datenmenge,
+ * beliebige Schaerfe.
+ *
+ * Ein Fenster darf ueber den Bildrand hinausragen; dieser Teil wird nie abgetastet
+ * (siehe sampleMargin in kaleidoscope.ts).
+ */
+export function renderTextureWindow(
+  def: TextureDef,
+  canvasSize: number,
+  win: TextureWindow,
+): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  const ctx = canvas.getContext("2d")!;
+
+  const scale = canvasSize / (win.size * TEXTURE_SIZE);
+  ctx.setTransform(scale, 0, 0, scale, -win.x * TEXTURE_SIZE * scale, -win.y * TEXTURE_SIZE * scale);
+  def.draw(ctx, TEXTURE_SIZE, makeRandom(def.seed));
+  return canvas;
+}
+
+/** Rendert eine Textur in Bildschirmgroesse (gecacht) und gibt sie als Canvas zurueck. */
 export function getTexture(def: TextureDef): HTMLCanvasElement {
   const hit = cache.get(def.id);
   if (hit) return hit;
 
-  const canvas = document.createElement("canvas");
-  canvas.width = TEXTURE_SIZE;
-  canvas.height = TEXTURE_SIZE;
-  const ctx = canvas.getContext("2d")!;
-  def.draw(ctx, TEXTURE_SIZE, makeRandom(def.seed));
+  const canvas = renderTexture(def, TEXTURE_SIZE);
   cache.set(def.id, canvas);
   return canvas;
 }

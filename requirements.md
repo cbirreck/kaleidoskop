@@ -41,9 +41,17 @@ Bewusst **nicht** responsive. iPad ist i-2 (siehe unten).
   zehn Minuten hin".
 - **A2b — Steuerung:**
   - **Seine Buttons** (Maus, groß, unten, Symbole): Play/Pause, Zurück zur Auswahl.
-  - **Meine Tasten** (unsichtbar): `↑`/`↓` Tempo, `←`/`→` Zackenzahl (auf der
-    Startseite blättern dieselben Tasten die Kachelseiten), `+`/`−` Timer,
-    `F` Fullscreen, `Esc` Freigabe des Endscreens.
+  - **Meine Tasten** (unsichtbar): `↑`/`↓` Tempo — **in Pause stattdessen der
+    Snapshot-Ausschnitt**; `←`/`→` Zackenzahl (auf der Startseite blättern dieselben
+    Tasten die Kachelseiten); `+`/`−` Timer; `F` Fullscreen; `Esc` Freigabe des
+    Endscreens.
+
+    Die Doppelbelegung von `↑`/`↓` ist kein Platzmangel: in Pause steht die Rotation,
+    ein Tempo einzustellen hätte dort keine sichtbare Wirkung — der Ausschnitt dagegen
+    schon, und sein Ring ist genau dann zu sehen. `+`/`−` wäre der falsche Kandidat
+    gewesen, weil der Timer laut A3 bewusst über Pausen hinweg weiterläuft und dort
+    verstellbar bleiben muss. `Bild auf`/`Bild ab` tun in Pause dasselbe, liegen auf
+    dem Laptop aber hinter der Fn-Taste und sind deshalb nicht der Hauptweg.
 - **Tempostufen:** 7 diskrete Stufen, Default Stufe 2.
   Startwerte ca. 1 / 3 / 6 / 12 / 25 / 50 / 100 °/s — **geschätzt, nicht gemessen.**
   Als benannte Konstanten oben in der Datei halten; nach der ersten Sitzung justieren.
@@ -86,6 +94,58 @@ Begrenzt die Bildschirmzeit. Default 10 Minuten.
 - **Ende:** Das letzte Muster friert ein, dunkelt ab, ein Mond-Symbol legt sich darüber.
   Es ist noch da, es schläft nur. Freigabe **nur** per `Esc`; Mausklicks werden auf
   dem Endscreen vollständig ignoriert.
+
+### A4 — Snapshot
+
+Ein Bild, das ihm gefällt, soll man ausdrucken und ausschneiden können.
+
+- **Button:** dritter großer Knopf unten rechts (Kamera-Symbol), **nur im Pausenmodus**
+  sichtbar. Im Lauf gibt es kein stehendes Bild zum Mitnehmen.
+- **Auflösung:** nicht der Bildschirminhalt, sondern eine Neuberechnung in 2048 px —
+  Textur inklusive. Die Motive sind Vektorarbeit auf einem `size`-Raster, dieselbe
+  Szene lässt sich also in jeder Schärfe zeichnen. Hochskaliert wäre sie matschig,
+  und matschig will man nicht an der Wand haben.
+- **Hintergrund:** transparent. Ein weißer Kasten um den Kreis ist beim Ausschneiden
+  nur im Weg.
+- **Dateiname:** `snap.png`, jeder neue Snap ersetzt den vorigen.
+- **Ausschnitt:** in Pause wählen `↑`/`↓` (ersatzweise `Bild auf`/`Bild ab`) einen
+  **konzentrischen Teilkreis** — gleicher Mittelpunkt, kleinerer Radius, in
+  Fünferschritten von 100 % bis 5 %. Die 5 % sind das Filetstück: nur noch die Nabe,
+  und genau die will er oft ausgeschnitten haben.
+  Er will meistens nur die Mitte ausgeschnitten haben, und die Mitte ist genau der
+  Teil mit der dichtesten Symmetrie.
+- **Vorschau:** im Pausenmodus zeigt ein gestrichelter Ring, was der Snapshot behalten
+  würde; außerhalb wird abgedunkelt. Ohne das rät man, welche Formen noch hineinfallen.
+  Der Ring liegt auf dem Stage-Canvas und ist deshalb nie im Snapshot selbst.
+
+**Warum ein Teilkreis nicht einfach ein Zuschnitt ist:** 5 % von 2048 px wären
+102 px — auf Papier eine Briefmarke. Größer rechnen und dann schneiden hilft auch
+nicht: für 5 % in voller Schärfe bräuchte die Textur rund 40 000 px Kantenlänge, mehr
+als ein Canvas kann.
+
+Stattdessen wird ein gedachter, entsprechend größerer Vollkreis angenommen und von
+der Textur **nur das Fenster gezeichnet, das der Innenkreis zeigt** — in voller
+Zielauflösung. Das geht, weil die Motive Vektorarbeit auf einem `size`-Raster sind
+und sich in jeder Schärfe zeichnen lassen. Folge: **jede** Stufe liefert 2048 px,
+auch die 5 %, bei gleichbleibendem Speicherbedarf. Gemessen 14–37 ms je Snap.
+
+Gegengeprüft: der 50-%-Snapshot deckt sich mit der Bildmitte des 100-%-Snapshots bis
+auf 0,53 von 255 mittlerer Abweichung — also Antialiasing, kein Versatz.
+
+**Grenze, die nicht an der Umsetzung liegt:** Eine Browser-Seite kann nicht von sich
+aus in den Projektordner schreiben. Es gibt genau zwei Wege, und keiner erfüllt
+"fester Pfad *und* lautlos" vollständig:
+
+1. *File System Access API* — der Ort wird **einmal pro Sitzung** in einem Dialog
+   gewählt, jeder weitere Snap überschreibt danach still dieselbe Datei. Das Handle
+   bleibt bewusst nur im Speicher: alles andere wäre Persistenz, und die ist hier
+   außer der einen `sessionStorage`-Zeile für den Timer ausgeschlossen.
+2. *Download-Fallback*, falls (1) auf `file://` gesperrt ist — landet im
+   Download-Ordner, und der Browser zählt hoch (`snap (1).png`). Überschreiben kann
+   er dort prinzipiell nicht.
+
+Der Code nimmt (1) und fällt nur im Fehlerfall auf (2) zurück. Ein Abbruch im Dialog
+bleibt ein Abbruch — es wird dann nicht hinterrücks doch noch etwas abgelegt.
 
 ---
 

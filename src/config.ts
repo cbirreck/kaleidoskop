@@ -59,5 +59,30 @@ export const ZOOM = 2.8;
 export const DRIFT_SPEED_X = 0.043;
 export const DRIFT_SPEED_Y = 0.029;
 
+/**
+ * Kantenlaenge des Snapshots in Pixeln (A4).
+ *
+ * Nicht die Bildschirmgroesse: das Bild wird fuer den Snapshot komplett neu gerendert,
+ * Textur inklusive. 2048 px sind bei 300 dpi gut 17 cm -- passend zum Zweck
+ * "ausdrucken und ausschneiden". Gilt fuer jeden Ausschnitt gleichermassen.
+ */
+export const SNAP_SIZE = 2048;
+
+/** Dateiname des Snapshots. Jeder neue Snap ersetzt den vorigen. */
+export const SNAP_FILENAME = "snap.png";
+
+/**
+ * Waehlbare Ausschnitte fuer den Snapshot: Anteil am Radius des vollen Kreises.
+ *
+ * Konzentrisch, also immer derselbe Mittelpunkt -- er will meistens nur die Mitte
+ * ausgeschnitten haben, und die Mitte ist genau der Teil mit der dichtesten Symmetrie.
+ * Fuenferschritte von 100 bis 5 Prozent; die 5 sind das Filetstueck, da bleibt nur
+ * noch die Nabe.
+ *
+ * Alle Stufen liefern dieselbe Ausgabegroesse (SNAP_SIZE) -- siehe snapshot.ts:
+ * der Ausschnitt wird gezeichnet und nicht geschnitten.
+ */
+export const SNAP_FRACTIONS = Array.from({ length: 20 }, (_, i) => (100 - i * 5) / 100);
+
 /** Timer-Default in Minuten (A3). */
 export const TIMER_DEFAULT_MINUTES = 10;

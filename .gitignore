@@ -2,3 +2,6 @@ node_modules/
 dist/
 *.local
 .DS_Store
+
+# Snapshot-Ausgabe (A4): wird bei jedem Snap ueberschrieben, gehoert nicht ins Repo.
+snap.png
